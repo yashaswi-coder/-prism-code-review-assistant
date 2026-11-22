@@ -8,7 +8,7 @@ from pathlib import Path
 from prism.adapters.base import AdapterResult, make_id
 from prism.evidence import extract_snippet
 from prism.models import Evidence, Finding
-from prism.runner import ToolOutputError, run_module
+from prism.runner import ToolOutputError, run_python_callable
 
 JAVA_RULES = Path(__file__).resolve().parents[3] / "rules" / "java.yml"
 _SEVERITY = {"ERROR": "high", "WARNING": "medium", "INFO": "info"}
@@ -77,8 +77,9 @@ def parse_semgrep_output(raw: str, source_lines: list[str], display_name: str) -
 def run_semgrep_java(
     path: Path, source_lines: list[str], display_name: str, timeout: float
 ) -> AdapterResult:
-    raw = run_module(
-        "semgrep",
+    raw = run_python_callable(
+        "semgrep.console_scripts.entrypoint",
+        "main",
         [
             "scan",
             "--config", str(JAVA_RULES),

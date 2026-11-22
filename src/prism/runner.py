@@ -56,6 +56,37 @@ def run_module(
     if importlib.util.find_spec(module) is None:
         raise ToolMissingError(f"{module} is not installed in this Python environment.")
     cmd = [sys.executable, "-I", "-m", module, *args]
+    return _run_process(cmd, module, cwd=cwd, timeout=timeout, ok_exit_codes=ok_exit_codes)
+
+
+def run_python_callable(
+    module: str,
+    callable_name: str,
+    args: list[str],
+    *,
+    cwd: Path,
+    timeout: float,
+    ok_exit_codes: tuple[int, ...] = (0,),
+) -> str:
+    """Run an installed Python console entry point without ``python -m``."""
+    if importlib.util.find_spec(module) is None:
+        raise ToolMissingError(f"{module} is not installed in this Python environment.")
+    call = (
+        "import importlib, sys; "
+        f"sys.exit(getattr(importlib.import_module({module!r}), {callable_name!r})())"
+    )
+    cmd = [sys.executable, "-I", "-c", call, *args]
+    return _run_process(cmd, module, cwd=cwd, timeout=timeout, ok_exit_codes=ok_exit_codes)
+
+
+def _run_process(
+    cmd: list[str],
+    tool_name: str,
+    *,
+    cwd: Path,
+    timeout: float,
+    ok_exit_codes: tuple[int, ...],
+) -> str:
     try:
         proc = subprocess.run(  # noqa: S603 - fixed argv list, no shell
             cmd,
@@ -67,10 +98,10 @@ def run_module(
             shell=False,
         )
     except subprocess.TimeoutExpired as exc:
-        raise ToolTimeoutError(f"{module} timed out after {timeout:g}s.") from exc
+        raise ToolTimeoutError(f"{tool_name} timed out after {timeout:g}s.") from exc
     except OSError as exc:
-        raise ToolExecutionError(f"Could not start {module}: {exc}") from exc
+        raise ToolExecutionError(f"Could not start {tool_name}: {exc}") from exc
     if proc.returncode not in ok_exit_codes:
         stderr = (proc.stderr or "").strip()[:500]
-        raise ToolExecutionError(f"{module} exited with status {proc.returncode}: {stderr}")
+        raise ToolExecutionError(f"{tool_name} exited with status {proc.returncode}: {stderr}")
     return proc.stdout
