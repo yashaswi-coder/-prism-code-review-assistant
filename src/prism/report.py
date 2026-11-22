@@ -7,7 +7,8 @@ import re
 from prism.models import SEVERITY_ORDER, AnalysisResult
 
 LIMITATIONS = (
-    "PRism reports findings from Ruff and Bandit. Static analysis produces false "
+    "PRism uses Ruff and Bandit for Python and a small local Semgrep rule set for Java. "
+    "Java coverage is an early prototype. Static analysis produces false "
     "positives and misses real problems; an empty report is not evidence that the "
     "code is correct or secure. Severity labels for Ruff rules are PRism's own "
     "heuristic. Every finding needs human review. This is a work-in-progress tool "
@@ -62,7 +63,8 @@ def to_markdown(result: AnalysisResult) -> str:
             out.append(f"- Tool-suggested fix: {f.suggested_fix}")
         if f.evidence.snippet:
             fence = _fence(f.evidence.snippet)
-            out += ["", f"{fence}python", f.evidence.snippet, fence]
+            language = "java" if f.file_path.lower().endswith(".java") else "python"
+            out += ["", f"{fence}{language}", f.evidence.snippet, fence]
         out.append("")
     out += ["## Limitations", "", LIMITATIONS, ""]
     return "\n".join(out)

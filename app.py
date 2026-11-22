@@ -12,27 +12,30 @@ from prism.report import LIMITATIONS, to_json, to_markdown
 st.set_page_config(page_title="PRism (WIP)", page_icon="🔍", layout="wide")
 st.title("PRism: evidence-grounded code review")
 st.warning(
-    "Work in progress. Findings come from Ruff and Bandit and **require human review**. "
+    "Work in progress. Python findings come from Ruff and Bandit; Java findings come from "
+    "PRism's local Semgrep rules. All findings **require human review**. "
     "An empty result does not mean the code is correct or secure."
 )
 st.caption(
     "Privacy: code is analyzed locally by static tools in a temporary directory that is deleted "
     "afterwards. It is **never executed**, not sent to any external service, and not saved by PRism. "
     "Feedback stays in this browser session unless you explicitly download its metadata-only export. "
-    f"Limit: {MAX_BYTES // 1000} KB per upload. Python source and unified diffs are text-only."
+    f"Limit: {MAX_BYTES // 1000} KB per upload. Python and Java source, plus Python unified diffs, are text-only."
 )
 
-paste_tab, upload_tab, diff_tab = st.tabs(["Paste code", "Upload .py file", "Review Python diff"])
+paste_tab, upload_tab, diff_tab = st.tabs(["Paste code", "Upload source file", "Review Python diff"])
 submission = None  # (source, display_name) set when a button is pressed
 
 with paste_tab:
-    pasted = st.text_area("Python source", height=260, key="pasted")
+    pasted_language = st.selectbox("Language", ["Python", "Java"], key="paste_language")
+    pasted = st.text_area(f"{pasted_language} source", height=260, key="pasted")
     if st.button("Analyze pasted code", type="primary"):
-        submission = (pasted, None)
+        pasted_name = "pasted_code.java" if pasted_language == "Java" else None
+        submission = (pasted, pasted_name)
         st.session_state.pop("diff_review", None)
 
 with upload_tab:
-    uploaded = st.file_uploader("Python file", type=["py"])
+    uploaded = st.file_uploader("Python or Java source file", type=["py", "java"])
     if st.button("Analyze uploaded file", disabled=uploaded is None):
         try:
             submission = decode_upload(uploaded.getvalue(), uploaded.name)
@@ -85,7 +88,9 @@ with diff_tab:
 
 if submission:
     try:
-        with st.spinner("Running Ruff and Bandit..."):
+        source_language = "Java" if (submission[1] or "").lower().endswith(".java") else "Python"
+        tool_label = "Semgrep Java rules" if source_language == "Java" else "Ruff and Bandit"
+        with st.spinner(f"Running {tool_label}..."):
             st.session_state["result"] = analyze_source(*submission)
     except InputError as exc:
         st.session_state.pop("result", None)
@@ -133,7 +138,8 @@ if result:
             conf = f" · confidence: {f.confidence}" if f.confidence else ""
             st.markdown(f"**{f.source_tool}** · {f.category}{conf}  \n{f.message}")
             if f.evidence.snippet:
-                st.code(f.evidence.snippet, language="python", line_numbers=True,
+                code_language = "java" if result.file_name.lower().endswith(".java") else "python"
+                st.code(f.evidence.snippet, language=code_language, line_numbers=True,
                         wrap_lines=True)
             if f.suggested_fix:
                 st.markdown(f"Tool-suggested fix: {f.suggested_fix}")
