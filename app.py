@@ -3,6 +3,7 @@
 import streamlit as st
 
 from prism.analyzer import analyze_source
+from prism.diffs import decode_diff_upload
 from prism.inputs import MAX_BYTES, InputError, decode_upload
 from prism.models import SEVERITY_ORDER
 from prism.report import LIMITATIONS, to_json, to_markdown
@@ -16,22 +17,67 @@ st.warning(
 st.caption(
     "Privacy: code is analyzed locally by static tools in a temporary directory that is deleted "
     "afterwards. It is **never executed**, not sent to any external service, and not saved by PRism. "
-    f"Limit: {MAX_BYTES // 1000} KB, `.py` text only."
+    f"Limit: {MAX_BYTES // 1000} KB per upload. Python source and unified diffs are text-only."
 )
 
-paste_tab, upload_tab = st.tabs(["Paste code", "Upload .py file"])
+paste_tab, upload_tab, diff_tab = st.tabs(["Paste code", "Upload .py file", "Review Python diff"])
 submission = None  # (source, display_name) set when a button is pressed
 
 with paste_tab:
     pasted = st.text_area("Python source", height=260, key="pasted")
     if st.button("Analyze pasted code", type="primary"):
         submission = (pasted, None)
+        st.session_state.pop("diff_review", None)
 
 with upload_tab:
     uploaded = st.file_uploader("Python file", type=["py"])
     if st.button("Analyze uploaded file", disabled=uploaded is None):
         try:
             submission = decode_upload(uploaded.getvalue(), uploaded.name)
+            st.session_state.pop("diff_review", None)
+        except InputError as exc:
+            st.error(str(exc))
+
+with diff_tab:
+    st.caption(
+        "Upload a single-file .diff/.patch and the complete updated .py file. "
+        "PRism analyzes the full file, then shows findings overlapping added lines."
+    )
+    diff_file = st.file_uploader(
+        "Unified diff (.diff or .patch)", type=["diff", "patch"], key="diff_file"
+    )
+    changed_source = st.file_uploader(
+        "Updated Python source (.py)", type=["py"], key="diff_source"
+    )
+    if st.button("Analyze changed lines", disabled=diff_file is None or changed_source is None):
+        st.session_state.pop("result", None)
+        st.session_state.pop("diff_review", None)
+        try:
+            diff_spec = decode_diff_upload(diff_file.getvalue(), diff_file.name)
+            source, source_name = decode_upload(changed_source.getvalue(), changed_source.name)
+            if diff_spec.file_path.casefold() != source_name.casefold():
+                raise InputError(
+                    f"The diff targets '{diff_spec.file_path}', but the uploaded file is "
+                    f"'{source_name}'. Upload the matching updated Python file."
+                )
+            analysis = analyze_source(source, source_name)
+            changed_findings = [
+                finding for finding in analysis.findings
+                if any(finding.line_start <= line <= finding.line_end for line in diff_spec.changed_lines)
+            ]
+            filtered_runs = [
+                run.model_copy(
+                    update={"finding_count": sum(item.source_tool == run.tool for item in changed_findings)}
+                )
+                for run in analysis.tool_runs
+            ]
+            st.session_state["result"] = analysis.model_copy(
+                update={"findings": changed_findings, "tool_runs": filtered_runs}
+            )
+            st.session_state["diff_review"] = {
+                "file": diff_spec.file_path,
+                "changed_lines": sorted(diff_spec.changed_lines),
+            }
         except InputError as exc:
             st.error(str(exc))
 
@@ -47,6 +93,13 @@ result = st.session_state.get("result")
 if result:
     st.divider()
     st.subheader(f"Results for {result.file_name}")
+    diff_review = st.session_state.get("diff_review")
+    if diff_review:
+        changed = diff_review["changed_lines"]
+        st.info(
+            f"Showing findings overlapping {len(changed)} added/changed line(s) "
+            f"in {diff_review['file']}. Analysis ran on the complete uploaded file."
+        )
 
     for run in result.tool_runs:
         label = f"{run.tool} {run.tool_version or ''}: {run.status}"
