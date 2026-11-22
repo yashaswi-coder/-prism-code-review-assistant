@@ -1,7 +1,7 @@
 {
-  "dataset_version": "0.1",
-  "description": "Small synthetic Python cases for checking PRism's current Ruff/Bandit baseline.",
-  "matching": "Exact (tool, rule_id) counts per case; each expected item is one labeled finding.",
+  "dataset_version": "0.2",
+  "description": "Synthetic Python cases for checking PRism's current Ruff/Bandit baseline.",
+  "matching": "Exact (case, tool, rule_id) counts; each expected item is one labeled finding.",
   "cases": [
     {
       "id": "clean-arithmetic",
@@ -40,6 +40,99 @@
     {
       "id": "handled-conversion-error",
       "file": "cases/empty_except.py",
+      "expected_findings": []
+    },
+    {
+      "id": "unused-local",
+      "file": "cases/unused_local.py",
+      "expected_findings": [{"tool": "ruff", "rule_id": "F841"}]
+    },
+    {
+      "id": "compare-to-true",
+      "file": "cases/compare_to_true.py",
+      "expected_findings": [{"tool": "ruff", "rule_id": "E712"}]
+    },
+    {
+      "id": "bare-except",
+      "file": "cases/bare_except.py",
+      "expected_findings": [{"tool": "ruff", "rule_id": "E722"}]
+    },
+    {
+      "id": "fstring-no-placeholder",
+      "file": "cases/fstring_without_placeholder.py",
+      "expected_findings": [{"tool": "ruff", "rule_id": "F541"}]
+    },
+    {
+      "id": "duplicate-dict-key",
+      "file": "cases/duplicate_dict_key.py",
+      "expected_findings": [{"tool": "ruff", "rule_id": "F601"}]
+    },
+    {
+      "id": "hardcoded-password",
+      "file": "cases/hardcoded_password.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B105"}]
+    },
+    {
+      "id": "hardcoded-password-default",
+      "file": "cases/hardcoded_password_default.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B107"}]
+    },
+    {
+      "id": "pickle-load",
+      "file": "cases/pickle_load.py",
+      "expected_findings": [
+        {"tool": "bandit", "rule_id": "B403"},
+        {"tool": "bandit", "rule_id": "B301"}
+      ]
+    },
+    {
+      "id": "weak-hash",
+      "file": "cases/weak_hash.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B324"}]
+    },
+    {
+      "id": "sql-string-format",
+      "file": "cases/sql_string_format.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B608"}]
+    },
+    {
+      "id": "bind-all-interfaces",
+      "file": "cases/bind_all_interfaces.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B104"}]
+    },
+    {
+      "id": "request-no-timeout",
+      "file": "cases/request_without_timeout.py",
+      "expected_findings": [{"tool": "bandit", "rule_id": "B113"}]
+    },
+    {
+      "id": "clean-boolean",
+      "file": "cases/clean_boolean.py",
+      "expected_findings": []
+    },
+    {
+      "id": "clean-string-format",
+      "file": "cases/clean_string_format.py",
+      "expected_findings": []
+    },
+    {
+      "id": "clean-specific-exception",
+      "file": "cases/clean_specific_exception.py",
+      "expected_findings": []
+    },
+    {
+      "id": "clean-comprehension",
+      "file": "cases/clean_comprehension.py",
+      "expected_findings": []
+    },
+    {
+      "id": "clean-bool-return",
+      "file": "cases/clean_boolean_return.py",
+      "expected_findings": []
+    },
+    {
+      "id": "clean-arithmetic-types",
+      "file": "cases/clean_arithmetic_types.py",
       "expected_findings": []
     }
   ]

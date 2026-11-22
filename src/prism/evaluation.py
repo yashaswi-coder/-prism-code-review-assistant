@@ -6,6 +6,7 @@ from collections import Counter
 from collections.abc import Iterable
 
 FindingKey = tuple[str, ...]
+CaseFinding = tuple[str, str, str]
 
 
 def score_findings(
@@ -34,4 +35,38 @@ def score_findings(
         "precision": precision,
         "recall": recall,
         "f1": f1,
+    }
+
+
+def score_by_tool(
+    expected: Iterable[CaseFinding],
+    predicted: Iterable[CaseFinding],
+) -> dict[str, dict[str, int | float | None]]:
+    expected_rows = list(expected)
+    predicted_rows = list(predicted)
+    tools = sorted({row[1] for row in expected_rows + predicted_rows})
+    return {
+        tool: score_findings(
+            ((case_id, rule_id) for case_id, source_tool, rule_id in expected_rows if source_tool == tool),
+            ((case_id, rule_id) for case_id, source_tool, rule_id in predicted_rows if source_tool == tool),
+        )
+        for tool in tools
+    }
+
+
+def score_by_rule(
+    expected: Iterable[CaseFinding],
+    predicted: Iterable[CaseFinding],
+) -> dict[str, dict[str, int | float | None]]:
+    expected_rows = list(expected)
+    predicted_rows = list(predicted)
+    labels = sorted({(row[1], row[2]) for row in expected_rows + predicted_rows})
+    return {
+        f"{tool}:{rule_id}": score_findings(
+            (case_id for case_id, source_tool, source_rule in expected_rows
+             if source_tool == tool and source_rule == rule_id),
+            (case_id for case_id, source_tool, source_rule in predicted_rows
+             if source_tool == tool and source_rule == rule_id),
+        )
+        for tool, rule_id in labels
     }
