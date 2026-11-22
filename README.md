@@ -1,6 +1,6 @@
 # PRism: evidence-grounded code review assistant
 
-> **Status: work in progress.** Only the local static-analysis MVP exists. Nothing here has been benchmarked.
+> **Status: work in progress.** PRism includes a small synthetic development benchmark; its scores are not a real-world quality estimate.
 
 Research question: *How can code-review suggestions be made more evidence-grounded, useful, and measurable, while controlling false positives?*
 
@@ -11,12 +11,13 @@ Research question: *How can code-review suggestions be made more evidence-ground
 - Findings normalized to one schema (`src/prism/models.py`) with evidence: tool, rule id, file, line range, code snippet, reference URL, CWE (Bandit).
 - Filters by source, severity, category. Markdown and JSON report downloads.
 - Mark findings as useful, incorrect, or not useful. Feedback is session-only and can be explicitly exported as JSON without code, snippets, messages, paths, or line numbers.
+- Run a small labeled synthetic benchmark for exact (case, tool, rule ID) precision/recall/F1; see [`docs/benchmark.md`](docs/benchmark.md).
 - Failures (missing tool, timeout, bad output, unparseable file) are shown in the UI and reports, never hidden.
 - Unit tests with fixtures that are real tool output, plus a headless UI smoke test.
 
 ## What is NOT implemented (planned, see `docs/roadmap.md`)
 - AI review suggestions (no model code exists; the app has no network calls)
-- Labeled benchmark, precision/recall, and false-positive evaluation; feedback exports are only a seed for a curated dataset
+- A larger, independently reviewed benchmark representative of real-world code; current synthetic scores are only a development baseline
 - GitHub Action / PR integration
 
 ## Safety properties (and how they are checked)
