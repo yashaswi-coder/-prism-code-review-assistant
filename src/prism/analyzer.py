@@ -14,6 +14,7 @@ from typing import Callable
 
 from prism.adapters.base import AdapterResult
 from prism.adapters.bandit import run_bandit
+from prism.adapters.semgrep import run_semgrep_java
 from prism.adapters.ruff import run_ruff
 from prism.inputs import sanitize_file_name, validate_source
 from prism.models import SEVERITY_ORDER, AnalysisResult, ToolRun
@@ -26,8 +27,9 @@ from prism.runner import (
 
 Adapter = Callable[[Path, list[str], str, float], AdapterResult]
 
-DEFAULT_TIMEOUTS = {"ruff": 30.0, "bandit": 60.0}
-ADAPTERS: dict[str, Adapter] = {"ruff": run_ruff, "bandit": run_bandit}
+DEFAULT_TIMEOUTS = {"ruff": 30.0, "bandit": 60.0, "semgrep": 60.0}
+PYTHON_ADAPTERS: dict[str, Adapter] = {"ruff": run_ruff, "bandit": run_bandit}
+JAVA_ADAPTERS: dict[str, Adapter] = {"semgrep": run_semgrep_java}
 
 
 def analyze_source(
@@ -37,17 +39,18 @@ def analyze_source(
     adapters: dict[str, Adapter] | None = None,
     timeouts: dict[str, float] | None = None,
 ) -> AnalysisResult:
-    """Analyze Python source text. Raises InputError for rejected input."""
+    """Analyze Python or Java source text. Raises InputError for rejected input."""
     display_name = sanitize_file_name(file_name)
     validate_source(source)
     source_lines = source.splitlines()
-    adapters = adapters or ADAPTERS
+    language_adapters = JAVA_ADAPTERS if display_name.lower().endswith(".java") else PYTHON_ADAPTERS
+    adapters = adapters or language_adapters
     timeouts = {**DEFAULT_TIMEOUTS, **(timeouts or {})}
 
     findings = []
     runs: list[ToolRun] = []
     with tempfile.TemporaryDirectory(prefix="prism_") as tmp:
-        target = Path(tmp) / "target.py"
+        target = Path(tmp) / f"target{Path(display_name).suffix.lower()}"
         target.write_text(source, encoding="utf-8")
         for tool, run in adapters.items():
             started = time.monotonic()

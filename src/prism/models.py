@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 SCHEMA_VERSION = "0.1"
 
 Severity = Literal["high", "medium", "low", "info"]
-SourceTool = Literal["ruff", "bandit"]
+SourceTool = Literal["ruff", "bandit", "semgrep"]
 Category = Literal["security", "correctness", "bug-risk", "style", "other"]
 ToolStatus = Literal["ok", "partial", "error", "missing", "timeout"]
 

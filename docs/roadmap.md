@@ -13,5 +13,6 @@ Status key: **done** (implemented and tested here), **planned** (not started).
 | 6 Session-only finding feedback + metadata export + 24-case synthetic baseline with per-tool/per-rule scoring | implemented; independently reviewed benchmark planned |
 | 7 GitHub Action, then opt-in PR comments | planned |
 | 8 Research extensions (one at a time, hypothesis first) | planned |
+| 9 Java source analysis with local Semgrep rules | prototype in progress; validation, benchmark coverage, and deployed verification remain |
 
-Next recommended step: add independently reviewed and feedback-labeled examples to the benchmark, then report per-rule and aggregate results before adding AI suggestions.
+Next recommended step: validate the Java rules against labeled examples and false-positive cases, add Java cases to the benchmark, then gather structured developer feedback before claiming cross-language quality.

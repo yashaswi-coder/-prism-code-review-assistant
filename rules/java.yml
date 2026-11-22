@@ -1,0 +1,52 @@
+rules:
+  - id: java.hardcoded-credential
+    languages: [java]
+    message: Possible hardcoded credential in a String assignment; load secrets from a secure configuration source.
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: CWE-798
+      references:
+        - https://cwe.mitre.org/data/definitions/798.html
+    patterns:
+      - pattern: String $NAME = "$VALUE";
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passwd|secret|token|api.?key).*
+
+  - id: java.weak-message-digest
+    languages: [java]
+    message: MD5 is a weak message digest; use a modern cryptographic hash where appropriate.
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: CWE-328
+      references:
+        - https://cwe.mitre.org/data/definitions/328.html
+    pattern: MessageDigest.getInstance("MD5")
+
+  - id: java.runtime-exec
+    languages: [java]
+    message: Runtime.exec launches an operating-system command; validate inputs and avoid constructing commands from untrusted data.
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: CWE-78
+      references:
+        - https://cwe.mitre.org/data/definitions/78.html
+    pattern: Runtime.getRuntime().exec(...)
+
+  - id: java.sql-string-concatenation
+    languages: [java]
+    message: SQL is built with string concatenation; use a parameterized PreparedStatement to reduce injection risk.
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: CWE-89
+      references:
+        - https://cwe.mitre.org/data/definitions/89.html
+    patterns:
+      - pattern-either:
+          - pattern: $STMT.executeQuery($QUERY + $INPUT)
+          - pattern: $STMT.executeUpdate($QUERY + $INPUT)
+          - pattern: $STMT.execute($QUERY + $INPUT)
