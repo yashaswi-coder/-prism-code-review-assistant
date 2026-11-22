@@ -4,19 +4,19 @@
 
 Research question: *How can code-review suggestions be made more evidence-grounded, useful, and measurable, while controlling false positives?*
 
-## What is implemented (Milestones 1-4, MVP)
+## What is implemented (local MVP)
 - Paste Python code or upload a `.py` file in a Streamlit UI.
 - Review a single-file `.diff`/`.patch` by uploading the unified diff and the complete updated `.py` file; analysis runs on the full file and displays findings that overlap added/changed lines.
 - Deterministic analysis with **Ruff** (rules `E,F,W,B`) and **Bandit** (security patterns).
 - Findings normalized to one schema (`src/prism/models.py`) with evidence: tool, rule id, file, line range, code snippet, reference URL, CWE (Bandit).
 - Filters by source, severity, category. Markdown and JSON report downloads.
+- Mark findings as useful, incorrect, or not useful. Feedback is session-only and can be explicitly exported as JSON without code, snippets, messages, paths, or line numbers.
 - Failures (missing tool, timeout, bad output, unparseable file) are shown in the UI and reports, never hidden.
 - Unit tests with fixtures that are real tool output, plus a headless UI smoke test.
 
 ## What is NOT implemented (planned, see `docs/roadmap.md`)
-- Human feedback labels (useful / not useful / incorrect)
 - AI review suggestions (no model code exists; the app has no network calls)
-- Labeled benchmark, precision/recall, false-positive rate
+- Labeled benchmark, precision/recall, and false-positive evaluation; feedback exports are only a seed for a curated dataset
 - GitHub Action / PR integration
 
 ## Safety properties (and how they are checked)
@@ -24,6 +24,7 @@ Research question: *How can code-review suggestions be made more evidence-ground
 - Tools run via argument lists, no `shell=True`, with timeouts, using `python -I`. Test: `test_subprocess_uses_argv_list_without_shell`.
 - Input limits: 200 KB, UTF-8 text, `.py` source uploads and `.diff`/`.patch` uploads only, no NUL bytes.
 - Code is written to a temp directory that is deleted after analysis. PRism does not log or save source. Streamlit usage stats are disabled in `.streamlit/config.toml`. While you use the app, results (including code snippets) stay in your browser session's memory.
+- Finding feedback remains in the browser session unless you explicitly download it. The JSON export contains labels and rule metadata only; it excludes source code, snippets, finding messages, file paths, and line numbers.
 - Not covered: this is a local tool, not a hardened multi-user service. Do not expose it publicly as-is.
 
 ## Setup and run
