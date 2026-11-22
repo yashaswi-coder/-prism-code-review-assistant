@@ -1,0 +1,46 @@
+{
+  "dataset_version": "0.1",
+  "description": "Small synthetic Python cases for checking PRism's current Ruff/Bandit baseline.",
+  "matching": "Exact (tool, rule_id) counts per case; each expected item is one labeled finding.",
+  "cases": [
+    {
+      "id": "clean-arithmetic",
+      "file": "cases/clean_arithmetic.py",
+      "expected_findings": []
+    },
+    {
+      "id": "unused-import",
+      "file": "cases/unused_import.py",
+      "expected_findings": [
+        {"tool": "ruff", "rule_id": "F401"}
+      ]
+    },
+    {
+      "id": "undefined-name",
+      "file": "cases/undefined_name.py",
+      "expected_findings": [
+        {"tool": "ruff", "rule_id": "F821"}
+      ]
+    },
+    {
+      "id": "dynamic-exec",
+      "file": "cases/dynamic_exec.py",
+      "expected_findings": [
+        {"tool": "bandit", "rule_id": "B102"}
+      ]
+    },
+    {
+      "id": "shell-subprocess",
+      "file": "cases/shell_subprocess.py",
+      "expected_findings": [
+        {"tool": "bandit", "rule_id": "B404"},
+        {"tool": "bandit", "rule_id": "B602"}
+      ]
+    },
+    {
+      "id": "handled-conversion-error",
+      "file": "cases/empty_except.py",
+      "expected_findings": []
+    }
+  ]
+}
