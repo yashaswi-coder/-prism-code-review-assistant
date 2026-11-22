@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from prism.analyzer import analyze_source  # noqa: E402
-from prism.evaluation import score_findings  # noqa: E402
+from prism.evaluation import score_by_rule, score_by_tool, score_findings  # noqa: E402
 
 
 def load_manifest(path: Path) -> dict:
@@ -84,9 +84,11 @@ def run_benchmark(manifest_path: Path) -> dict:
         "tool_versions": versions,
         "case_count": len(case_results),
         "score": total_score,
+        "score_by_tool": score_by_tool(all_expected, all_predicted),
+        "score_by_rule": score_by_rule(all_expected, all_predicted),
         "cases": case_results,
         "interpretation": (
-            "Development baseline on a small synthetic dataset; not a real-world quality estimate."
+            "Development baseline on synthetic cases; not a real-world quality estimate."
         ),
     }
 

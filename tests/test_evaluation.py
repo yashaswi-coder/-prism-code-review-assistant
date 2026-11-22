@@ -1,4 +1,4 @@
-from prism.evaluation import score_findings
+from prism.evaluation import score_by_rule, score_by_tool, score_findings
 
 
 def test_score_findings_calculates_precision_recall_and_f1():
@@ -26,3 +26,23 @@ def test_score_findings_preserves_duplicate_counts_and_empty_dataset():
 
     empty = score_findings([], [])
     assert (empty["precision"], empty["recall"], empty["f1"]) == (None, None, None)
+
+
+def test_grouped_scores_keep_case_identity_for_tool_and_rule_breakdowns():
+    expected = [("case-a", "ruff", "F401"), ("case-b", "bandit", "B102")]
+    predicted = [
+        ("case-a", "ruff", "F401"),
+        ("case-b", "bandit", "B602"),
+        ("case-c", "bandit", "B404"),
+    ]
+
+    by_tool = score_by_tool(expected, predicted)
+    assert by_tool["ruff"]["precision"] == 1.0
+    assert by_tool["bandit"]["true_positives"] == 0
+    assert by_tool["bandit"]["false_positives"] == 2
+    assert by_tool["bandit"]["false_negatives"] == 1
+
+    by_rule = score_by_rule(expected, predicted)
+    assert by_rule["ruff:F401"]["true_positives"] == 1
+    assert by_rule["bandit:B404"]["precision"] == 0.0
+    assert by_rule["bandit:B404"]["recall"] is None

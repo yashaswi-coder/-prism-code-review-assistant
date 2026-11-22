@@ -1,0 +1,1 @@
+PASSWORD = "synthetic-test-password"
