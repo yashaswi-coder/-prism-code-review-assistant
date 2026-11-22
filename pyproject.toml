@@ -19,6 +19,9 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.0,<9.0"]
 
+[tool.poetry]
+packages = [{ include = "prism", from = "src" }]
+
 [tool.setuptools.packages.find]
 where = ["src"]
 
