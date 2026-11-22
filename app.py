@@ -4,6 +4,7 @@ import streamlit as st
 
 from prism.analyzer import analyze_source
 from prism.diffs import decode_diff_upload
+from prism.feedback import serialize_feedback
 from prism.inputs import MAX_BYTES, InputError, decode_upload
 from prism.models import SEVERITY_ORDER
 from prism.report import LIMITATIONS, to_json, to_markdown
@@ -17,6 +18,7 @@ st.warning(
 st.caption(
     "Privacy: code is analyzed locally by static tools in a temporary directory that is deleted "
     "afterwards. It is **never executed**, not sent to any external service, and not saved by PRism. "
+    "Feedback stays in this browser session unless you explicitly download its metadata-only export. "
     f"Limit: {MAX_BYTES // 1000} KB per upload. Python source and unified diffs are text-only."
 )
 
@@ -93,6 +95,7 @@ result = st.session_state.get("result")
 if result:
     st.divider()
     st.subheader(f"Results for {result.file_name}")
+    feedback_key_prefix = f"feedback_{result.generated_at.timestamp():.6f}"
     diff_review = st.session_state.get("diff_review")
     if diff_review:
         changed = diff_review["changed_lines"]
@@ -141,11 +144,36 @@ if result:
                 links.append(f"CWE-{f.evidence.cwe_id}")
             if links:
                 st.caption(" · ".join(links))
+            st.radio(
+                "Finding feedback",
+                ["No feedback", "Useful", "Incorrect", "Not useful"],
+                horizontal=True,
+                key=f"{feedback_key_prefix}_{f.id}",
+            )
 
     d1, d2 = st.columns(2)
     d1.download_button("Download Markdown report", to_markdown(result),
                        file_name="prism_report.md", mime="text/markdown")
     d2.download_button("Download JSON report", to_json(result),
                        file_name="prism_report.json", mime="application/json")
+    feedback_labels = {
+        finding.id: label
+        for finding in shown
+        if (label := st.session_state.get(f"{feedback_key_prefix}_{finding.id}")) in {
+            "Useful", "Incorrect", "Not useful"
+        }
+    }
+    if feedback_labels:
+        normalized_labels = {
+            finding_id: label.lower().replace(" ", "_")
+            for finding_id, label in feedback_labels.items()
+        }
+        st.download_button(
+            "Download finding feedback (JSON)",
+            serialize_feedback(result, normalized_labels),
+            file_name="prism_feedback.json",
+            mime="application/json",
+            help="Exports labels and rule metadata only. Source code and finding text are excluded.",
+        )
     with st.expander("Limitations"):
         st.write(LIMITATIONS)
