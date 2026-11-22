@@ -31,6 +31,7 @@ Research question: *How can code-review suggestions be made more evidence-ground
 
 ## Setup and run
 Requires Python (declared `>=3.10`; **only 3.12.3 has been tested**).
+The root `requirements.txt` installs the project in editable mode for Streamlit Community Cloud; runtime dependencies remain declared in `pyproject.toml`.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
