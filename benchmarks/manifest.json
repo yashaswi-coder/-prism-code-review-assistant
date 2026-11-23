@@ -1,6 +1,6 @@
 {
-  "dataset_version": "0.2",
-  "description": "Synthetic Python cases for checking PRism's current Ruff/Bandit baseline.",
+  "dataset_version": "0.3",
+  "description": "Synthetic Python and Java cases for checking PRism's current Ruff, Bandit, and Semgrep baseline.",
   "matching": "Exact (case, tool, rule_id) counts; each expected item is one labeled finding.",
   "cases": [
     {
@@ -133,6 +133,41 @@
     {
       "id": "clean-arithmetic-types",
       "file": "cases/clean_arithmetic_types.py",
+      "expected_findings": []
+    },
+    {
+      "id": "java-hardcoded-credential",
+      "file": "cases/java/java_hardcoded_credential.java",
+      "expected_findings": [{"tool": "semgrep", "rule_id": "java.hardcoded-credential"}]
+    },
+    {
+      "id": "java-weak-message-digest",
+      "file": "cases/java/java_weak_message_digest.java",
+      "expected_findings": [{"tool": "semgrep", "rule_id": "java.weak-message-digest"}]
+    },
+    {
+      "id": "java-runtime-exec",
+      "file": "cases/java/java_runtime_exec.java",
+      "expected_findings": [{"tool": "semgrep", "rule_id": "java.runtime-exec"}]
+    },
+    {
+      "id": "java-sql-concatenation",
+      "file": "cases/java/java_sql_concatenation.java",
+      "expected_findings": [{"tool": "semgrep", "rule_id": "java.sql-string-concatenation"}]
+    },
+    {
+      "id": "java-clean-prepared-statement",
+      "file": "cases/java/java_clean_prepared_statement.java",
+      "expected_findings": []
+    },
+    {
+      "id": "java-clean-modern-digest",
+      "file": "cases/java/java_clean_modern_digest.java",
+      "expected_findings": []
+    },
+    {
+      "id": "java-clean-basic",
+      "file": "cases/java/java_clean_basic.java",
       "expected_findings": []
     }
   ]

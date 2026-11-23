@@ -31,14 +31,17 @@ def run_benchmark(manifest_path: Path) -> dict:
     all_expected = []
     all_predicted = []
     versions: dict[str, str] = {}
+    by_language: dict[str, dict[str, list[tuple[str, str, str]]]] = {}
 
     for case in manifest["cases"]:
         relative = Path(case["file"])
         source_path = (benchmark_root / relative).resolve()
-        if benchmark_root not in source_path.parents or source_path.suffix.lower() != ".py":
+        suffix = source_path.suffix.lower()
+        if benchmark_root not in source_path.parents or suffix not in {".py", ".java"}:
             raise ValueError(f"Unsafe or unsupported benchmark path: {relative}")
+        language = {".py": "python", ".java": "java"}[suffix]
         source = source_path.read_text(encoding="utf-8")
-        result = analyze_source(source, f"{case['id']}.py")
+        result = analyze_source(source, f"{case['id']}{suffix}")
         failed_runs = [run for run in result.tool_runs if run.status != "ok"]
         if failed_runs:
             failures = ", ".join(f"{run.tool}: {run.status} ({run.detail})" for run in failed_runs)
@@ -51,12 +54,16 @@ def run_benchmark(manifest_path: Path) -> dict:
         predicted = [(item.source_tool, item.rule_id) for item in result.findings]
         all_expected.extend((case["id"], *key) for key in expected)
         all_predicted.extend((case["id"], *key) for key in predicted)
+        language_rows = by_language.setdefault(language, {"expected": [], "predicted": []})
+        language_rows["expected"].extend((case["id"], *key) for key in expected)
+        language_rows["predicted"].extend((case["id"], *key) for key in predicted)
         case_score = score_findings(expected, predicted)
         expected_counts = Counter(expected)
         predicted_counts = Counter(predicted)
         case_results.append(
             {
                 "id": case["id"],
+                "language": language,
                 "expected_findings": [
                     {"tool": tool, "rule_id": rule_id} for tool, rule_id in expected
                 ],
@@ -86,6 +93,10 @@ def run_benchmark(manifest_path: Path) -> dict:
         "score": total_score,
         "score_by_tool": score_by_tool(all_expected, all_predicted),
         "score_by_rule": score_by_rule(all_expected, all_predicted),
+        "score_by_language": {
+            language: score_findings(rows["expected"], rows["predicted"])
+            for language, rows in sorted(by_language.items())
+        },
         "cases": case_results,
         "interpretation": (
             "Development baseline on synthetic cases; not a real-world quality estimate."
