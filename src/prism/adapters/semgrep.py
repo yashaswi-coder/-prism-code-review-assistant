@@ -43,7 +43,14 @@ def parse_semgrep_output(raw: str, source_lines: list[str], display_name: str) -
             metadata = {}
         raw_category = str(metadata.get("category", "security")).lower()
         category = raw_category if raw_category in {"security", "correctness", "bug-risk", "style", "other"} else "security"
-        rule_id = check_id.rsplit("/", 1)[-1]
+        # Semgrep may prefix IDs with the absolute config path. Remove that
+        # environment-specific prefix so rule labels remain portable.
+        normalized_id = check_id.replace(chr(92), "/").rsplit("/", 1)[-1]
+        rule_id = (
+            "java." + normalized_id.rsplit(".java.", 1)[1]
+            if ".java." in normalized_id
+            else normalized_id
+        )
         snippet, snippet_line = extract_snippet(source_lines, start, end)
         references = metadata.get("references") or []
         reference_url = references[0] if references and isinstance(references[0], str) else None

@@ -1,6 +1,6 @@
 # PRism: evidence-grounded code review assistant
 
-> **Status: work in progress.** PRism has a 24-case synthetic Python benchmark and an early Java analyzer using a small local Semgrep rule set. Neither is a real-world quality estimate.
+> **Status: work in progress.** PRism has a small synthetic Python/Java benchmark and an early Java analyzer using a local Semgrep rule set. Its scores are not a real-world quality estimate.
 
 Research question: *How can code-review suggestions be made more evidence-grounded, useful, and measurable, while controlling false positives?*
 
@@ -12,7 +12,7 @@ Research question: *How can code-review suggestions be made more evidence-ground
 - Findings normalized to one schema (`src/prism/models.py`) with evidence: tool, rule id, file, line range, code snippet, reference URL, CWE (Bandit).
 - Filters by source, severity, category. Markdown and JSON report downloads.
 - Mark findings as useful, incorrect, or not useful. Feedback is session-only and can be explicitly exported as JSON without code, snippets, messages, paths, or line numbers.
-- Run a 24-case labeled synthetic Python benchmark for exact (case, tool, rule ID) precision/recall/F1, including per-tool and per-rule breakdowns; see [`docs/benchmark.md`](docs/benchmark.md). Java is not yet included in the benchmark.
+- Run a labeled synthetic Python and Java benchmark for exact (case, tool, rule ID) precision/recall/F1, with per-tool, per-rule, and per-language breakdowns; see [`docs/benchmark.md`](docs/benchmark.md).
 - Failures (missing tool, timeout, bad output, unparseable file) are shown in the UI and reports, never hidden.
 - Unit tests with fixtures that are real tool output, plus a headless UI smoke test.
 

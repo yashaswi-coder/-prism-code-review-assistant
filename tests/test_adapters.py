@@ -1,11 +1,13 @@
 """Parsing/normalization tests. Fixtures are real tool output (see tests/fixtures/README.md)."""
 
+import json
 from pathlib import Path
 
 import pytest
 
 from prism.adapters.bandit import parse_bandit_output
 from prism.adapters.ruff import parse_ruff_output
+from prism.adapters.semgrep import parse_semgrep_output
 from prism.runner import ToolOutputError
 
 FIX = Path(__file__).parent / "fixtures"
@@ -64,3 +66,27 @@ def test_bandit_parse_error_becomes_warning_not_silence():
 def test_bandit_invalid_output_raises(raw):
     with pytest.raises(ToolOutputError):
         parse_bandit_output(raw, [], "s.py")
+
+
+def test_semgrep_rule_id_drops_machine_specific_config_path():
+    raw = json.dumps(
+        {
+            "results": [
+                {
+                    "check_id": "mount.src.prism.rules.java.hardcoded-credential",
+                    "start": {"line": 1},
+                    "end": {"line": 1},
+                    "extra": {
+                        "message": "Possible hardcoded credential",
+                        "severity": "WARNING",
+                        "metadata": {"category": "security"},
+                    },
+                }
+            ],
+            "errors": [],
+        }
+    )
+
+    result = parse_semgrep_output(raw, ['String API_TOKEN = "demo";'], "sample.java")
+
+    assert [finding.rule_id for finding in result.findings] == ["java.hardcoded-credential"]
